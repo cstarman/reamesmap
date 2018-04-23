@@ -26,7 +26,8 @@ ui <- bootstrapPage(
                 selectInput("Region", "Region:", choices = NULL),
                 selectInput("Name", "Name:", choices = NULL),
                 
-                selectInput("RegionT", "Region Two:", choices = NULL)
+                selectInput("RegionT", "Region Two:", choices = NULL),
+                selectInput("NameT", "Name Two:", choices = NULL)
                 
                 # 
                 # tags$p(tags$small(includeHTML("attr.html")))
@@ -50,6 +51,11 @@ server <- function(input, output, session) {
   names(region_listT) <- region_listT
   regionChoiceT <- c("All", "None", region_listT)
   updateSelectInput(session, "RegionT", choices = regionChoiceT)
+  
+  name_listT <- dataTwo$NameT
+  names(name_listT) <- name_listT
+  nameChoiceT <- c("All", name_listT)
+  updateSelectInput(session, "NameT", choices = nameChoiceT)
   
   pallete <- brewer.pal(9, "Set1")
   
@@ -81,14 +87,20 @@ server <- function(input, output, session) {
   
   
   filteredDataTwo <- reactive({
-    if ("All" %in% input$RegionT){
+    if ("All" %in% input$RegionT && "All" %in% input$NameT){
       dataTwo
     }
-    else {
+    else if ("All" %in% input$RegionT && !("All" %in% input$NameT)) {
+      dataTwo %>% filter(NameT == input$NameT)
+    }
+    else if (!("All" %in% input$RegionT) && "All" %in% input$NameT) {
       dataTwo %>% filter(RegionT == input$RegionT)
     }
+    else {
+      dataTwo %>% filter(RegionT == input$RegionT,
+                      NameT == input$NameT)
+    }
   })
-  
   
   observe({
     # pal <- colorpal()
@@ -137,10 +149,10 @@ server <- function(input, output, session) {
                        fillOpacity = 1,
                        fillColor = ~pal(Name),
                        popup = ~paste(Name),
-                       clusterOptions = markerClusterOptions()) %>%
-      addLegend("bottomleft", pal = pal, values = data$Name,
-                  title = "Names",
-                  opacity = 1)
+                       clusterOptions = markerClusterOptions())# %>%
+      #addLegend("bottomleft", pal = pal, values = data$Name,
+      #           title = "Names",
+      #            opacity = 1)
     }
     
     ### Map dataset two
