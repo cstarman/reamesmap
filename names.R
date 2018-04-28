@@ -69,6 +69,7 @@ server <- function(input, output, session) {
       fitBounds(~min(Longitude), ~min(Latitude), ~max(Longitude), ~max(Latitude))
   })
   
+  # Flitering for first two data controls
   filteredData <- reactive({
     if ("All" %in% input$Region && "All" %in% input$Name){
       data
@@ -85,7 +86,7 @@ server <- function(input, output, session) {
     }
   })
   
-  
+  #Filtering for second two data sets
   filteredDataTwo <- reactive({
     if ("All" %in% input$RegionT && "All" %in% input$NameT){
       dataTwo
@@ -98,7 +99,7 @@ server <- function(input, output, session) {
     }
     else {
       dataTwo %>% filter(RegionT == input$RegionT,
-                      NameT == input$NameT)
+                         NameT == input$NameT)
     }
   })
   
