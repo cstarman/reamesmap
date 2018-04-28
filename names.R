@@ -6,8 +6,8 @@ library(RColorBrewer)
 data <- readxl::read_excel("GreekData.xlsx")
 dataTwo <- readxl::read_excel("ReamesDataTwo.xlsx")
 dataThree <- readxl::read_excel("ReamesDataThree.xlsx")
-names(data) <- c("Name", "Location", "Lat/Long", "Latitude", "Longitude", "Actual", "Date", "Region", "URL")
-names(dataTwo) <- c("NameT", "LocationT", "Lat/LongT", "Latitude", "Longitude", "ActualT", "DateT", "RegionT", "URLT")
+names(data) <- c("Name", "NameBase", "Popularity", "Location", "Lat/Long", "Latitude", "Longitude", "Date Range", "Date", "DateNum", "Region", "URL")
+names(dataTwo) <- c("NameT", "PopularityT", "LocationT", "Lat/LongT", "Latitude", "Longitude", "Date RangeT", "DateT", "RegionT", "URLT")
 
 
 ui <- bootstrapPage(
@@ -57,7 +57,7 @@ server <- function(input, output, session) {
   nameChoiceT <- c("All", name_listT)
   updateSelectInput(session, "NameT", choices = nameChoiceT)
   
-  pallete <- brewer.pal(9, "Set1")
+  pallete <- brewer.pal(8, "Set1")
   
   colorpal <- reactive({
     colorFactor(pallete, data$Name)
@@ -150,10 +150,10 @@ server <- function(input, output, session) {
                        fillOpacity = 1,
                        fillColor = ~pal(Name),
                        popup = ~paste(Name),
-                       clusterOptions = markerClusterOptions())# %>%
-      #addLegend("bottomleft", pal = pal, values = data$Name,
-      #           title = "Names",
-      #            opacity = 1)
+                       clusterOptions = markerClusterOptions()) %>%
+      addLegend("bottomleft", pal = pal, values = data$Name,
+                 title = "Names",
+                  opacity = 1)
     }
     
     ### Map dataset two
