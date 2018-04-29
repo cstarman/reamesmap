@@ -2,36 +2,59 @@ library(tidyverse)
 library(leaflet)
 library(shiny)
 library(RColorBrewer)
+library(shinyWidgets)
 
 data <- readxl::read_excel("GreekData.xlsx")
 dataTwo <- readxl::read_excel("ReamesDataTwo.xlsx")
 dataThree <- readxl::read_excel("ReamesDataThree.xlsx")
 names(data) <- c("Name", "NameBase", "Popularity", "Location", "Lat/Long", "Latitude", "Longitude", "Date Range", "Date", "DateNum", "Region", "URL")
-names(dataTwo) <- c("NameT", "PopularityT", "LocationT", "Lat/LongT", "Latitude", "Longitude", "Date RangeT", "DateT", "RegionT", "URLT")
+names(dataTwo) <- c("NameT", "PopularityT", "LocationT", "Lat/LongT", "Latitude", "Longitude", "Date RangeT", "DateT", "DateNumT", "RegionT", "URLT")
+val <- c("Attic", "Doric")
+col <- colorNumeric(c("#d13c3c", "#5f50e5"), 1:1)
+
 
 
 ui <- bootstrapPage(
-  tags$style(type = "text/css", "html, body { width: 100%; height: 100%"),
+  tags$style(type = "text/css", "html, body { width: 100%; height: 100%}, .irs-grid-text{color: black, stroke: 2}" ),
   tags$head(includeCSS("styles.css")),
   leafletOutput("map", width = "100%", height = "100%"),
-  absolutePanel(h3("Usage of Hephestian"),
+  absolutePanel(h3("The Case of Hephaistion"),
                 id = "controls", class = "panel panel-default", top = 10, right = 10,
                 fixed = TRUE, draggable = FALSE, width = 330, height = "auto",
                 
                 # Histogram 
                 # plotOutput("histCentile", height = 200),
                 # plotOutput("lineTrend", height = 140),
-               
+                h4 ("Attic-Ionic"),
                 # Region filters 
                 selectInput("Region", "Region:", choices = NULL),
                 selectInput("Name", "Name:", choices = NULL),
                 
-                selectInput("RegionT", "Region Two:", choices = NULL),
-                selectInput("NameT", "Name Two:", choices = NULL)
+                h4("Doric-Aeolic"),
+                
+                selectInput("RegionT", "Region:", choices = NULL),
+                selectInput("NameT", "Name:", choices = NULL),
+                
+                radioButtons("radio", label = h3("Cluster Options"),
+                             choices = list("Regular Color" = 1, "Regular Color, No Cluster" = 2, "Two Tone, No Cluster" = 3), 
+                             selected = 1)
                 
                 # 
                 # tags$p(tags$small(includeHTML("attr.html")))
                 
+  ),
+  absolutePanel(h3("Timeline"),
+      id = "time", class = "panel panel-default", fixed = TRUE, draggable = FALSE,
+      width = 350, height = "auto", top = 10, left = 50, align = "center", 
+      sliderTextInput(
+        inputId = "timeline", 
+        label = "Years BCE", 
+        grid = TRUE, 
+        force_edges = TRUE,
+        animate = TRUE,
+        post = " BC",
+        choices = c(600, 500, 400, 300, 200, 100)
+      )
   )
 )
 
@@ -57,11 +80,21 @@ server <- function(input, output, session) {
   nameChoiceT <- c("All", name_listT)
   updateSelectInput(session, "NameT", choices = nameChoiceT)
   
+  updateSliderTextInput(session, "DateNum")
+  
   pallete <- brewer.pal(8, "Set1")
+  
+  palleteTwo <- brewer.pal(9, "Set1")
   
   colorpal <- reactive({
     colorFactor(pallete, data$Name)
   })
+  
+  colorpalTwo <- reactive({
+    colorFactor(palleteTwo, dataTwo$NameT)
+  })
+  
+
   
   output$map <- renderLeaflet({
     leaflet(data) %>% 
@@ -72,36 +105,45 @@ server <- function(input, output, session) {
   # Flitering for first two data controls
   filteredData <- reactive({
     if ("All" %in% input$Region && "All" %in% input$Name){
-      data
+      data %>% filter(DateNum >= input$timeline)
     }
     else if ("All" %in% input$Region && !("All" %in% input$Name)) {
-      data %>% filter(Name == input$Name)
+      data %>% filter(Name == input$Name,
+                      DateNum >= input$timeline)
     }
     else if (!("All" %in% input$Region) && "All" %in% input$Name) {
-      data %>% filter(Region == input$Region)
+      data %>% filter(Region == input$Region,
+                      DateNum >= input$timeline)
     }
     else {
       data %>% filter(Region == input$Region,
-                      Name == input$Name)
+                      Name == input$Name,
+                      DateNum >= input$timeline)
     }
   })
   
   #Filtering for second two data sets
   filteredDataTwo <- reactive({
     if ("All" %in% input$RegionT && "All" %in% input$NameT){
-      dataTwo
+      dataTwo %>% filter(DateNumT >= input$timeline)
     }
     else if ("All" %in% input$RegionT && !("All" %in% input$NameT)) {
-      dataTwo %>% filter(NameT == input$NameT)
+      dataTwo %>% filter(NameT == input$NameT,
+                         DateNumT >= input$timeline)
     }
     else if (!("All" %in% input$RegionT) && "All" %in% input$NameT) {
-      dataTwo %>% filter(RegionT == input$RegionT)
+      dataTwo %>% filter(RegionT == input$RegionT,
+                         DateNumT >= input$timeline)
     }
     else {
       dataTwo %>% filter(RegionT == input$RegionT,
-                         NameT == input$NameT)
+                         NameT == input$NameT,
+                         DateNumT >= input$timeline)
     }
   })
+  
+  #filteredData %>% filter(DateNum >= input$timeline)
+  #filteredDataTwo %>% filter(DateNum >= input$timeline)
   
   observe({
     # pal <- colorpal()
@@ -130,13 +172,17 @@ server <- function(input, output, session) {
     #             opacity = 1)
     
     pal <- colorpal()
+    palTwo <- colorpalTwo()
+    
+
     
     ### Map dataset one
     if ("None" %in% input$Region) {
       leafletProxy("map", data = filteredData()) %>%
         clearMarkerClusters() %>%
-        clearMarkers()  
-    } else {
+        clearMarkers() %>%
+        clearControls()
+    } else if (input$radio == 1) {
     leafletProxy("map", data = filteredData()) %>%
       clearMarkerClusters() %>%
       clearMarkers() %>%
@@ -149,10 +195,70 @@ server <- function(input, output, session) {
                        color = '#000000',
                        fillOpacity = 1,
                        fillColor = ~pal(Name),
-                       popup = ~paste(Name),
+                       popup = ~paste("<b>Name</b>", "<br/>", Name,
+                                      "<br/>",
+                                      "<b>Date</b>", "<br/>", Date,
+                                      "<br/>",
+                                      "<b>Location</b>", "<br/>", Location,
+                                      "<br/>",
+                                      "<b>Epigraphic Link</b>", "<br/>", "<a href=", URL, ">Click</a>"),
                        clusterOptions = markerClusterOptions()) %>%
-      addLegend("bottomleft", pal = pal, values = data$Name,
-                 title = "Names",
+       addLegend("bottomleft", pal = palTwo, values = dataTwo$NameT,
+                  title = "Doric-Aeolic",
+                  opacity = 1) %>%
+       addLegend("bottomleft", pal = pal, values = data$Name,
+                 title = "Attic-Ionic",
+                  opacity = 1) 
+    } else if (input$radio == 2) {
+      leafletProxy("map", data = filteredData()) %>%
+        clearMarkerClusters() %>%
+        clearMarkers() %>%
+        clearControls() %>%
+        #addTiles() %>%
+        addCircleMarkers(radius = 7,
+                         stroke = TRUE,
+                         opacity = 1,
+                         weight = 1,
+                         color = '#000000',
+                         fillOpacity = 1,
+                         fillColor = ~pal(Name),
+                         popup = ~paste("<b>Name</b>", "<br/>", Name,
+                                        "<br/>",
+                                        "<b>Date</b>", "<br/>", Date,
+                                        "<br/>",
+                                        "<b>Location</b>", "<br/>", Location,
+                                        "<br/>",
+                                        "<b>Epigraphic Link</b>", "<br/>", "<a href=", URL, ">Click</a>"),
+                         clusterOptions = markerClusterOptions(disableClusteringAtZoom = TRUE)) %>%
+        addLegend("bottomleft", pal = palTwo, values = dataTwo$NameT,
+                  title = "Doric-Aeolic",
+                  opacity = 1) %>%
+        addLegend("bottomleft", pal = pal, values = data$Name,
+                  title = "Attic-Ionic",
+                  opacity = 1) 
+    } else if (input$radio == 3) {
+      leafletProxy("map", data = filteredData()) %>%
+        clearMarkerClusters() %>%
+        clearMarkers() %>%
+        clearControls() %>%
+        #addTiles() %>%
+        addCircleMarkers(radius = 7,
+                         stroke = TRUE,
+                         opacity = 1,
+                         weight = 1,
+                         color = '#000000',
+                         fillOpacity = 1,
+                         fillColor = '#d13c3c',
+                         popup = ~paste("<b>Name</b>", "<br/>", Name,
+                                        "<br/>",
+                                        "<b>Date</b>", "<br/>", Date,
+                                        "<br/>",
+                                        "<b>Location</b>", "<br/>", Location,
+                                        "<br/>",
+                                        "<b>Epigraphic Link</b>", "<br/>", "<a href=", URL, ">Click</a>"),
+                         clusterOptions = markerClusterOptions(disableClusteringAtZoom = TRUE)) %>%
+        addLegend("bottomleft", colors = c("#d13c3c", "#5f50e5"), labels = c("Attic-Ionic", "Doric-Aeolic"),
+                  title = "Legend",
                   opacity = 1)
     }
     
@@ -160,13 +266,101 @@ server <- function(input, output, session) {
     if ("None" %in% input$RegionT) {
       leafletProxy("map", data = filteredDataTwo()) %>%
         clearMarkers()
-    } else {
+    } else if (input$radio == 1) {
     leafletProxy("map", data = filteredDataTwo()) %>%
       clearMarkers() %>%
-      #clearControls() %>%
+      clearControls() %>%
       #addTiles() %>%
-      addMarkers(popup = ~paste(NameT),
-                 clusterOptions = markerClusterOptions())
+      addCircleMarkers(radius = 7,
+                         stroke = TRUE,
+                         opacity = 1,
+                         weight = 2,
+                         color = '#ffffff',
+                         fillOpacity = 1,
+                         fillColor = ~palTwo(NameT),
+                         popup = ~paste("<b>Name</b>", "<br/>", NameT,
+                                      "<br/>",
+                                      "<b>Date</b>", "<br/>", DateT,
+                                      "<br/>",
+                                      "<b>Location</b>", "<br/>", LocationT,
+                                      "<br/>",
+                                      "<b>Epigraphic Link</b>", "<br/>", "<a href=", URLT, ">Click</a>"),
+                         clusterOptions = markerClusterOptions()) %>%
+        addLegend("bottomleft", pal = palTwo, values = dataTwo$NameT,
+                  title = "Doric-Aeolic",
+                  opacity = 1) %>%
+        addLegend("bottomleft", pal = pal, values = data$Name,
+                  title = "Attic-Ionic",
+                  opacity = 1) 
+    } else if (input$radio == 2) {
+      leafletProxy("map", data = filteredDataTwo()) %>%
+        clearMarkers() %>%
+        clearControls() %>%
+        #addTiles() %>%
+        addCircleMarkers(radius = 7,
+                         stroke = TRUE,
+                         opacity = 1,
+                         weight = 2,
+                         color = '#ffffff',
+                         fillOpacity = 1,
+                         fillColor = ~palTwo(NameT),
+                         popup = ~paste("<b>Name</b>", "<br/>", NameT,
+                                        "<br/>",
+                                        "<b>Date</b>", "<br/>", DateT,
+                                        "<br/>",
+                                        "<b>Location</b>", "<br/>", LocationT,
+                                        "<br/>",
+                                        "<b>Epigraphic Link</b>", "<br/>", "<a href=", URLT, ">Click</a>"),
+                         clusterOptions = markerClusterOptions(disableClusteringAtZoom = TRUE)) %>%
+        addLegend("bottomleft", pal = palTwo, values = dataTwo$NameT,
+                  title = "Doric-Aeolic",
+                  opacity = 1) %>%
+        addLegend("bottomleft", pal = pal, values = data$Name,
+                  title = "Attic-Ionic",
+                  opacity = 1) 
+    } else if ("None" %in% input$Region && input$radio == 3) {
+      leafletProxy("map", data = filteredDataTwo()) %>%
+        clearMarkers() %>%
+        #clearControls() %>%
+        #addTiles() %>%
+        addCircleMarkers(radius = 7,
+                         stroke = TRUE,
+                         opacity = 1,
+                         weight = 1,
+                         color = '#000000',
+                         fillOpacity = 1,
+                         fillColor = '#5f50e5',
+                         popup = ~paste("<b>Name</b>", "<br/>", NameT,
+                                                "<br/>",
+                                                "<b>Date</b>", "<br/>", DateT,
+                                                "<br/>",
+                                                "<b>Location</b>", "<br/>", LocationT,
+                                                "<br/>",
+                                                "<b>Epigraphic Link</b>", "<br/>", "<a href=", URLT, ">Click</a>"),
+                         clusterOptions = markerClusterOptions(disableClusteringAtZoom = TRUE)) %>%
+          addLegend("bottomleft", colors = c("#d13c3c", "#5f50e5"), labels = c("Attic-Ionic", "Doric-Aeolic"),
+                    title = "Legend",
+                    opacity = 1)
+    } else if (!("None" %in% input$Region) && input$radio == 3) {
+      leafletProxy("map", data = filteredDataTwo()) %>%
+        clearMarkers() %>%
+        #clearControls() %>%
+        #addTiles() %>%
+        addCircleMarkers(radius = 7,
+                         stroke = TRUE,
+                         opacity = 1,
+                         weight = 1,
+                         color = '#000000',
+                         fillOpacity = 1,
+                         fillColor = '#5f50e5',
+                         popup = ~paste("<b>Name</b>", "<br/>", NameT,
+                                        "<br/>",
+                                        "<b>Date</b>", "<br/>", DateT,
+                                        "<br/>",
+                                        "<b>Location</b>", "<br/>", LocationT,
+                                        "<br/>",
+                                        "<b>Epigraphic Link</b>", "<br/>", "<a href=", URLT, ">Click</a>"),
+                         clusterOptions = markerClusterOptions(disableClusteringAtZoom = TRUE))
     }
   })
 
