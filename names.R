@@ -3,6 +3,7 @@ library(leaflet)
 library(shiny)
 library(RColorBrewer)
 library(shinyWidgets)
+library(rsconnect)
 
 data <- readxl::read_excel("GreekData.xlsx")
 dataTwo <- readxl::read_excel("ReamesDataTwo.xlsx")

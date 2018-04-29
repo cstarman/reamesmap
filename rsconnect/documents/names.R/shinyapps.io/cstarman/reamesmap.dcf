@@ -1,0 +1,13 @@
+name: reamesmap
+title: reamesmap
+username:
+account: cstarman
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 333444
+bundleId: 1345843
+url: https://cstarman.shinyapps.io/reamesmap/
+when: 1525018977.40475
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: codekey.csv
