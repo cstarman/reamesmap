@@ -21,7 +21,7 @@ ui <- bootstrapPage(
   leafletOutput("map", width = "100%", height = "100%"),
   absolutePanel(h3("The Case of Hephaistion"),
                 id = "controls", class = "panel panel-default", top = 10, right = 10,
-                fixed = TRUE, draggable = FALSE, width = 330, height = "auto",
+                fixed = TRUE, draggable = FALSE, width = 250, height = "auto",
                 
                 # Histogram 
                 # plotOutput("histCentile", height = 200),
@@ -44,12 +44,12 @@ ui <- bootstrapPage(
                 # tags$p(tags$small(includeHTML("attr.html")))
                 
   ),
-  absolutePanel(h3("Timeline"),
+  absolutePanel(
       id = "time", class = "panel panel-default", fixed = TRUE, draggable = FALSE,
-      width = 350, height = "auto", top = 10, left = 50, align = "center", 
+      width = 350, height = "auto", top = 10, left = 50, align = "center", padding = 10, 
       sliderTextInput(
-        inputId = "timeline", 
-        label = "Years BCE", 
+        inputId = "timeline",
+        label = "Timeline",
         grid = TRUE, 
         force_edges = TRUE,
         animate = TRUE,
@@ -204,10 +204,10 @@ server <- function(input, output, session) {
                                       "<br/>",
                                       "<b>Epigraphic Link</b>", "<br/>", "<a href=", URL, ">Click</a>"),
                        clusterOptions = markerClusterOptions()) %>%
-       addLegend("bottomleft", pal = palTwo, values = dataTwo$NameT,
+       addLegend(layerId = "DA", "bottomleft", pal = palTwo, values = dataTwo$NameT,
                   title = "Doric-Aeolic",
                   opacity = 1) %>%
-       addLegend("bottomleft", pal = pal, values = data$Name,
+       addLegend(layerId = "AI", "bottomleft", pal = pal, values = data$Name,
                  title = "Attic-Ionic",
                   opacity = 1) 
     } else if (input$radio == 2) {
@@ -365,7 +365,7 @@ server <- function(input, output, session) {
     }
   })
 
-  
+
   # output$histCentile <- renderPlot({
   #   ggplot(filteredSeverity(), aes(x = accidentseverity)) +
   #     geom_bar(stat = "count", aes(fill = bytype)) +
