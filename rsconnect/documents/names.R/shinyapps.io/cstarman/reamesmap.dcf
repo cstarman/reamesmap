@@ -5,9 +5,9 @@ account: cstarman
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 333444
-bundleId: 1345843
+bundleId: 1347324
 url: https://cstarman.shinyapps.io/reamesmap/
-when: 1525018977.40475
+when: 1525099637.81626
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: codekey.csv
