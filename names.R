@@ -23,9 +23,7 @@ ui <- bootstrapPage(
                 id = "controls", class = "panel panel-default", top = 10, right = 10,
                 fixed = TRUE, draggable = FALSE, width = 250, height = "auto",
                 
-                # Histogram 
-                # plotOutput("histCentile", height = 200),
-                # plotOutput("lineTrend", height = 140),
+
                 h4 ("Attic-Ionic"),
                 # Region filters 
                 selectInput("Region", "Region:", choices = NULL),
@@ -39,9 +37,6 @@ ui <- bootstrapPage(
                 radioButtons("radio", label = h3("Cluster Options"),
                              choices = list("Regular Color" = 1, "Regular Color, No Cluster" = 2, "Two Tone, No Cluster" = 3), 
                              selected = 1)
-                
-                # 
-                # tags$p(tags$small(includeHTML("attr.html")))
                 
   ),
   absolutePanel(
@@ -147,30 +142,6 @@ server <- function(input, output, session) {
   #filteredDataTwo %>% filter(DateNum >= input$timeline)
   
   observe({
-    # pal <- colorpal()
-    # 
-    # leafletProxy("map", data = filteredData()) %>% 
-    #   clearMarkers() %>% 
-    #   clearControls() %>% 
-    #   addCircleMarkers(radius = 6,
-    #                    stroke = FALSE,
-    #                    fillColor = ~pal(accidentseverity),
-    #                    fillOpacity = 0.7,
-    #                    popup = ~paste("Severity: ", accidentseverity, 
-    #                                   "<br/>",
-    #                                   "Injuries: ", totalinjuries,
-    #                                   "<br/>",
-    #                                   "Fatalities: ", totalfatalities,
-    #                                   "<br/>",
-    #                                   "Type: ", bytype,
-    #                                   "<br/>",
-    #                                   "Conditions: ", weather,
-    #                                   "<br/>",
-    #                                   "Alcohol involved: ", alcohol)
-    #   ) %>% 
-    #   addLegend("bottomleft", pal = pal, values = ~accidentseverity,
-    #             title = "Accident Severity",
-    #             opacity = 1)
     
     pal <- colorpal()
     palTwo <- colorpalTwo()
