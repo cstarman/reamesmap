@@ -14,7 +14,6 @@ val <- c("Attic", "Doric")
 col <- colorNumeric(c("#d13c3c", "#5f50e5"), 1:1)
 
 
-
 ui <- bootstrapPage(
   tags$style(type = "text/css", "html, body { width: 100%; height: 100%}, .irs-grid-text{color: black, stroke: 2}" ),
   tags$head(includeCSS("styles.css")),
@@ -22,30 +21,30 @@ ui <- bootstrapPage(
   absolutePanel(h3("The Case of Hephaistion"),
                 id = "controls", class = "panel panel-default", top = 10, right = 10,
                 fixed = TRUE, draggable = FALSE, width = 250, height = "auto",
-                
+
 
                 h4 ("Attic-Ionic"),
-                # Region filters 
+                # Region filters
                 selectInput("Region", "Region:", choices = NULL),
                 selectInput("Name", "Name:", choices = NULL),
-                
+
                 h4("Doric-Aeolic"),
-                
+
                 selectInput("RegionT", "Region:", choices = NULL),
                 selectInput("NameT", "Name:", choices = NULL),
-                
+
                 radioButtons("radio", label = h3("Cluster Options"),
-                             choices = list("Regular Color" = 1, "Regular Color, No Cluster" = 2, "Two Tone, No Cluster" = 3), 
+                             choices = list("Regular Color" = 1, "Regular Color, No Cluster" = 2, "Two Tone, No Cluster" = 3),
                              selected = 1)
-                
+
   ),
   absolutePanel(
       id = "time", class = "panel panel-default", fixed = TRUE, draggable = FALSE,
-      width = 350, height = "auto", top = 10, left = 50, align = "center", padding = 10, 
+      width = 350, height = "auto", top = 10, left = 50, align = "center", padding = 10,
       sliderTextInput(
         inputId = "timeline",
         label = "Timeline",
-        grid = TRUE, 
+        grid = TRUE,
         force_edges = TRUE,
         animate = TRUE,
         post = " BC",
@@ -55,49 +54,50 @@ ui <- bootstrapPage(
 )
 
 server <- function(input, output, session) {
-  
+
+  # First we set up dropdown options for 1) regions, and 2) time periods
   region_list <- data$Region
   names(region_list) <- region_list
   regionChoice <- c("All", "None", region_list)
   updateSelectInput(session, "Region", choices = regionChoice)
-  
+
   name_list <- data$Name
   names(name_list) <- name_list
   nameChoice <- c("All", name_list)
   updateSelectInput(session, "Name", choices = nameChoice)
-  
+
   region_listT <- dataTwo$RegionT
   names(region_listT) <- region_listT
   regionChoiceT <- c("All", "None", region_listT)
   updateSelectInput(session, "RegionT", choices = regionChoiceT)
-  
+
   name_listT <- dataTwo$NameT
   names(name_listT) <- name_listT
   nameChoiceT <- c("All", name_listT)
   updateSelectInput(session, "NameT", choices = nameChoiceT)
-  
+
   updateSliderTextInput(session, "DateNum")
-  
+
   pallete <- brewer.pal(8, "Set1")
-  
+
   palleteTwo <- brewer.pal(9, "Set1")
-  
+
   colorpal <- reactive({
-    colorFactor(pallete, data$Name)
+    colorFactor(palette, data$Name)
   })
-  
+
   colorpalTwo <- reactive({
     colorFactor(palleteTwo, dataTwo$NameT)
   })
-  
 
-  
+
+
   output$map <- renderLeaflet({
-    leaflet(data) %>% 
-      addProviderTiles(provider = "Stamen.Watercolor") %>% 
+    leaflet(data) %>%
+      addProviderTiles(provider = "Stamen.Watercolor") %>%
       fitBounds(~min(Longitude), ~min(Latitude), ~max(Longitude), ~max(Latitude))
   })
-  
+
   # Flitering for first two data controls
   filteredData <- reactive({
     if ("All" %in% input$Region && "All" %in% input$Name){
@@ -117,7 +117,7 @@ server <- function(input, output, session) {
                       DateNum >= input$timeline)
     }
   })
-  
+
   #Filtering for second two data sets
   filteredDataTwo <- reactive({
     if ("All" %in% input$RegionT && "All" %in% input$NameT){
@@ -137,17 +137,17 @@ server <- function(input, output, session) {
                          DateNumT >= input$timeline)
     }
   })
-  
+
   #filteredData %>% filter(DateNum >= input$timeline)
   #filteredDataTwo %>% filter(DateNum >= input$timeline)
-  
+
   observe({
-    
+
     pal <- colorpal()
     palTwo <- colorpalTwo()
-    
 
-    
+
+
     ### Map dataset one
     if ("None" %in% input$Region) {
       leafletProxy("map", data = filteredData()) %>%
@@ -180,7 +180,7 @@ server <- function(input, output, session) {
                   opacity = 1) %>%
        addLegend(layerId = "AI", "bottomleft", pal = pal, values = data$Name,
                  title = "Attic-Ionic",
-                  opacity = 1) 
+                  opacity = 1)
     } else if (input$radio == 2) {
       leafletProxy("map", data = filteredData()) %>%
         clearMarkerClusters() %>%
@@ -207,7 +207,7 @@ server <- function(input, output, session) {
                   opacity = 1) %>%
         addLegend("bottomleft", pal = pal, values = data$Name,
                   title = "Attic-Ionic",
-                  opacity = 1) 
+                  opacity = 1)
     } else if (input$radio == 3) {
       leafletProxy("map", data = filteredData()) %>%
         clearMarkerClusters() %>%
@@ -233,7 +233,7 @@ server <- function(input, output, session) {
                   title = "Legend",
                   opacity = 1)
     }
-    
+
     ### Map dataset two
     if ("None" %in% input$RegionT) {
       leafletProxy("map", data = filteredDataTwo()) %>%
@@ -263,7 +263,7 @@ server <- function(input, output, session) {
                   opacity = 1) %>%
         addLegend("bottomleft", pal = pal, values = data$Name,
                   title = "Attic-Ionic",
-                  opacity = 1) 
+                  opacity = 1)
     } else if (input$radio == 2) {
       leafletProxy("map", data = filteredDataTwo()) %>%
         clearMarkers() %>%
@@ -289,7 +289,7 @@ server <- function(input, output, session) {
                   opacity = 1) %>%
         addLegend("bottomleft", pal = pal, values = data$Name,
                   title = "Attic-Ionic",
-                  opacity = 1) 
+                  opacity = 1)
     } else if ("None" %in% input$Region && input$radio == 3) {
       leafletProxy("map", data = filteredDataTwo()) %>%
         clearMarkers() %>%
@@ -345,23 +345,18 @@ server <- function(input, output, session) {
   #     xlab("Accident Severity (1 = most severe)") +
   #     ylab("No. of Accidents")
   # })
-  
-  # output$lineTrend <- renderPlot({
-  #   ggplot(omaha_data, aes(x = year, color = bytype)) +
-  #     geom_line(stat = "count") +
-  #     theme(legend.title = element_blank()) +
-  #     labs(title = "Trend for All Years") +
-  #     geom_vline(xintercept=as.numeric(input$range), linetype = 1)
-  # })
-  
+
+  output$timebar <- renderPlot({
+    ggplot(data, aes(x = Date)) +
+      geom_bar(stat = "count", aes(fill = Region)) +
+      theme_minimal() +
+      theme(legend.position = "none") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      ggtitle("TEMPORARY: Number of events") +
+      xlab("Time period") +
+      ylab("No. of events")
+  })
+
 }
 
 shinyApp(ui, server)
-
-
-
-
-
-
-
-
